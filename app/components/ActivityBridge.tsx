@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useProducts } from "./ProductContext";
 import { useSales } from "./SalesContext";
 import { useActivity, ActivityType } from "./ActivityContext";
@@ -52,5 +52,3 @@ export function ActivityBridge() {
 
   return null;
 }
-
-import React from "react";

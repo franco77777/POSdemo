@@ -108,7 +108,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     const product = products.find((p) => p.id === id);
     if (product) {
       const updatedProduct = { ...product, ...updates };
-      setProducts((prev) =
+      setProducts((prev) =>
         prev.map((p) => (p.id === id ? updatedProduct : p)),
       );
 
@@ -143,9 +143,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   }, [products]);
 
   const reduceStock = useCallback((id: string, cantidad: number) => {
-    setProducts((prev) =
-      prev.map((p) =
-003e
+    setProducts((prev) =>
+      prev.map((p) =>
         p.id === id
           ? {
               ...p,
