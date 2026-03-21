@@ -1,0 +1,45 @@
+{
+  "name": "my-project",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "description": "Hello World!",
+  "author": "Jane Doe",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "electron": "electron .",
+    "dist": "electron-builder",
+    "export": "next export"
+  },
+  "build": {
+    "appId": "com.miapp.app",
+    "productName": "MiApp",
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    }
+  },
+  "dependencies": {
+    "@zxing/browser": "^0.1.5",
+    "lucide-react": "^0.577.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "recharts": "^3.8.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "electron": "^41.0.3",
+    "electron-builder": "^26.8.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
