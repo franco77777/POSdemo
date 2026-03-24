@@ -77,7 +77,7 @@ const menuItems = [
     title: "Reportes",
     description: "Generar reportes de ventas",
     icon: BarChart3,
-    href: "#",
+    href: "/reports",
     color: "bg-indigo-500",
     hoverColor: "hover:bg-indigo-600",
   },
