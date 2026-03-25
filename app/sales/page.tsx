@@ -14,10 +14,16 @@ import {
   DollarSign,
   TrendingUp,
   CreditCard,
+  Camera,
+  Barcode,
+  AlertCircle,
+  ExternalLink,
+  X,
 } from "lucide-react";
 import { useProducts, Product } from "../components/ProductContext";
 import { useSales } from "../components/SalesContext";
 import Toast from "../components/Toast";
+import BarcodeScanner from "../customer/components/BarcodeScanner";
 
 export default function SalesPage() {
   const { products, reduceStock } = useProducts();
@@ -25,6 +31,11 @@ export default function SalesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCart, setShowCart] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Estado para escáner
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedProductNotFound, setScannedProductNotFound] = useState(false);
+  const [lastScannedCode, setLastScannedCode] = useState("");
 
   // Estado para Toast
   const [toast, setToast] = useState<{
@@ -61,6 +72,50 @@ export default function SalesPage() {
         ganancia: product.ganancia,
       });
     }
+  };
+
+  // Función para manejar código escaneado
+  const handleBarcodeScanned = (code: string) => {
+    setLastScannedCode(code);
+
+    // Buscar producto por código de barra
+    const product = products.find((p) => p.codigoBarra === code);
+
+    if (product) {
+      // Producto encontrado - agregar al carrito
+      if (product.cantidadInicial > 0) {
+        addToCart({
+          productId: product.id,
+          nombre: product.nombre,
+          categoria: product.categoria,
+          precioVenta: product.precioVenta,
+          ganancia: product.ganancia,
+        });
+
+        // Mostrar toast de éxito
+        setToast({
+          show: true,
+          message: `${product.nombre} agregado al carrito`,
+          type: "success",
+        });
+      } else {
+        // Producto sin stock
+        setToast({
+          show: true,
+          message: `${product.nombre} no tiene stock disponible`,
+          type: "error",
+        });
+      }
+    } else {
+      // Producto no encontrado - mostrar diálogo
+      setScannedProductNotFound(true);
+    }
+  };
+
+  // Función para continuar escaneando después de producto no encontrado
+  const handleContinueScanning = () => {
+    setScannedProductNotFound(false);
+    setLastScannedCode("");
   };
 
   const handleProcessSale = async () => {
@@ -155,8 +210,8 @@ export default function SalesPage() {
           {/* Products Section */}
           <div className={`${showCart ? "lg:col-span-2" : "lg:col-span-3"}`}>
             {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative max-w-md">
+            <div className="mb-6 flex gap-2">
+              <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"
@@ -166,6 +221,14 @@ export default function SalesPage() {
                   className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
               </div>
+              <button
+                onClick={() => setShowScanner(true)}
+                className="px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2"
+                title="Escanear código de barras"
+              >
+                <Camera className="w-5 h-5" />
+                <span className="hidden sm:inline">Escanear</span>
+              </button>
             </div>
 
             {/* Products Grid */}
@@ -449,6 +512,91 @@ export default function SalesPage() {
             />
           )}
         </div>
+
+        {/* Scanner Modal */}
+        {showScanner && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+              <div className="p-4 bg-gradient-to-r from-blue-500 to-cyan-600 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Escanear Código de Barras
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowScanner(false);
+                    setLastScannedCode("");
+                  }}
+                  className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <div className="p-4">
+                <div className="mb-4 text-sm text-slate-600 dark:text-slate-400 text-center">
+                  Apunta la cámara al código de barras del producto
+                </div>
+                <BarcodeScanner
+                  onScan={handleBarcodeScanned}
+                  autoClose={false}
+                />
+                <button
+                  onClick={() => {
+                    setShowScanner(false);
+                    setLastScannedCode("");
+                  }}
+                  className="w-full mt-4 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-medium rounded-xl transition-colors"
+                >
+                  Terminar de escanear
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Product Not Found Dialog */}
+        {scannedProductNotFound && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+              <div className="p-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                  Producto no encontrado
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  El código escaneado no existe en el inventario
+                </p>
+                <div className="bg-slate-100 dark:bg-slate-700 rounded-lg p-3 mb-6">
+                  <div className="flex items-center gap-2 justify-center">
+                    <Barcode className="w-5 h-5 text-slate-500" />
+                    <span className="font-mono text-lg text-slate-800 dark:text-slate-200">
+                      {lastScannedCode}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleContinueScanning}
+                    className="flex-1 py-3 px-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-medium rounded-xl transition-colors"
+                  >
+                    Seguir escaneando
+                  </button>
+                  <Link
+                    href={`/add-product?barcode=${encodeURIComponent(lastScannedCode)}`}
+                    className="flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Agregar al inventario
+                    <ExternalLink className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

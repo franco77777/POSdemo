@@ -44,6 +44,12 @@ export default function BarcodeScanner({ onScan, autoClose = false }: BarcodeSca
                   setTimeout(() => {
                     controls?.stop();
                   }, 500);
+                } else {
+                  // Si no se cierra automáticamente, reiniciar para permitir otro escaneo
+                  setTimeout(() => {
+                    hasScannedRef.current = false;
+                    setResult("");
+                  }, 1500);
                 }
               }
             }
