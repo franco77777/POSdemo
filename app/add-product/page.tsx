@@ -14,9 +14,11 @@ import {
   Plus,
   Check,
   AlertCircle,
+  Camera,
 } from "lucide-react";
 import { useProducts } from "../components/ProductContext";
 import Toast from "../components/Toast";
+import BarcodeScanner from "../customer/components/BarcodeScanner";
 
 // Componente que usa useSearchParams
 function AddProductForm() {
@@ -47,6 +49,9 @@ function AddProductForm() {
 
   // Estado para error de código de barra
   const [barcodeError, setBarcodeError] = useState("");
+
+  // Estado para mostrar el escáner
+  const [showScanner, setShowScanner] = useState(false);
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -205,6 +210,24 @@ function AddProductForm() {
     router.push("/");
   };
 
+  // Función para manejar el código escaneado
+  const handleBarcodeScanned = (code: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      codigoBarra: code,
+    }));
+
+    // Validar si el código ya existe
+    if (!isBarcodeUnique(code)) {
+      setBarcodeError("Este código de barra ya está registrado");
+    } else {
+      setBarcodeError("");
+    }
+
+    // Cerrar el escáner
+    setShowScanner(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Toast Notification */}
@@ -340,20 +363,31 @@ function AddProductForm() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Código de Barra
                 </label>
-                <div className="relative">
-                  <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    name="codigoBarra"
-                    value={formData.codigoBarra}
-                    onChange={handleChange}
-                    placeholder="Ej: 7501234567890"
-                    className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-700 border rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 transition-colors ${
-                      barcodeError
-                        ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                        : "border-slate-300 dark:border-slate-600 focus:ring-emerald-500 focus:border-emerald-500"
-                    }`}
-                  />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="text"
+                      name="codigoBarra"
+                      value={formData.codigoBarra}
+                      onChange={handleChange}
+                      placeholder="Ej: 7501234567890"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-700 border rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 transition-colors ${
+                        barcodeError
+                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                          : "border-slate-300 dark:border-slate-600 focus:ring-emerald-500 focus:border-emerald-500"
+                      }`}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowScanner(true)}
+                    className="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                    title="Escanear código de barras"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <span className="hidden sm:inline">Escanear</span>
+                  </button>
                 </div>
                 {barcodeError && (
                   <div className="flex items-center gap-1 text-red-500 text-sm animate-in fade-in slide-in-from-top-1">
@@ -527,6 +561,32 @@ function AddProductForm() {
               </div>
             </div>
           </div>
+
+          {/* Modal del Escáner */}
+          {showScanner && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+                <div className="p-4 bg-gradient-to-r from-blue-500 to-cyan-600 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Camera className="w-5 h-5" />
+                    Escanear Código de Barras
+                  </h3>
+                  <button
+                    onClick={() => setShowScanner(false)}
+                    className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+                <div className="p-4">
+                  <div className="mb-4 text-sm text-slate-600 dark:text-slate-400 text-center">
+                    Apunta la cámara al código de barras del producto
+                  </div>
+                  <BarcodeScanner onScan={handleBarcodeScanned} autoClose={true} />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-end pt-4">
