@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Package,
@@ -18,12 +18,17 @@ import {
 import { useProducts } from "../components/ProductContext";
 import Toast from "../components/Toast";
 
-export default function AddProductPage() {
+// Componente que usa useSearchParams
+function AddProductForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addProduct, categories, addCategory, isBarcodeUnique } =
     useProducts();
   const [isLoading, setIsLoading] = useState(false);
   const [autoCalculate, setAutoCalculate] = useState(true);
+
+  // Obtener barcode de la URL si existe
+  const barcodeFromUrl = searchParams.get("barcode");
 
   // Estado para Toast
   const [toast, setToast] = useState<{
@@ -54,6 +59,21 @@ export default function AddProductPage() {
     stockMaximo: "",
     ganancia: "",
   });
+
+  // Efecto para prellenar el código de barras desde la URL
+  useEffect(() => {
+    if (barcodeFromUrl) {
+      setFormData((prev) => ({
+        ...prev,
+        codigoBarra: barcodeFromUrl,
+      }));
+
+      // Validar si el código ya existe
+      if (!isBarcodeUnique(barcodeFromUrl)) {
+        setBarcodeError("Este código de barra ya está registrado");
+      }
+    }
+  }, [barcodeFromUrl, isBarcodeUnique]);
 
   // Función para resetear el formulario
   const resetForm = () => {
@@ -530,5 +550,21 @@ export default function AddProductPage() {
         </form>
       </main>
     </div>
+  );
+}
+
+// Componente principal con Suspense
+export default function AddProductPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Cargando...</p>
+        </div>
+      </div>
+    }>
+      <AddProductForm />
+    </Suspense>
   );
 }
